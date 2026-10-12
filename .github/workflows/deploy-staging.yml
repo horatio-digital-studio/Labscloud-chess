@@ -1,0 +1,23 @@
+# Every push to main: full CI, then deploy to chess-staging.labscloud.uk (REQ-OPS-03).
+name: Deploy staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: staging
+      ref: ${{ github.sha }}
+      version: staging-${{ github.run_number }}
+    secrets: inherit

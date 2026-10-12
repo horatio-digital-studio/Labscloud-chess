@@ -1,0 +1,777 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chess.labscloud.uk/schema/protocol-v1.json",
+  "title": "labscloud-chess protocol v1",
+  "description": "Contract for WebSocket and REST messages. See docs/protocol.md. Client messages reject unknown fields; server messages may gain fields that clients ignore.",
+  "$defs": {
+    "colour": {
+      "enum": [
+        "white",
+        "black"
+      ]
+    },
+    "player_key": {
+      "enum": [
+        "harry",
+        "partner"
+      ]
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "epoch_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "uci": {
+      "type": "string",
+      "pattern": "^[a-h][1-8][a-h][1-8][qrbn]?$"
+    },
+    "result": {
+      "enum": [
+        "1-0",
+        "0-1",
+        "1/2-1/2",
+        null
+      ]
+    },
+    "status": {
+      "enum": [
+        "waiting",
+        "active",
+        "checkmate",
+        "stalemate",
+        "insufficient_material",
+        "seventyfive_moves",
+        "fivefold_repetition",
+        "resigned",
+        "draw_agreed",
+        "draw_claimed"
+      ]
+    },
+    "player_ref": {
+      "type": "object",
+      "required": [
+        "player",
+        "name"
+      ],
+      "properties": {
+        "player": {
+          "$ref": "#/$defs/player_key"
+        },
+        "name": {
+          "$ref": "#/$defs/display_name"
+        }
+      }
+    },
+    "move_record": {
+      "type": "object",
+      "required": [
+        "uci",
+        "san"
+      ],
+      "properties": {
+        "uci": {
+          "$ref": "#/$defs/uci"
+        },
+        "san": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 8
+        }
+      }
+    },
+    "online": {
+      "type": "object",
+      "required": [
+        "white",
+        "black"
+      ],
+      "properties": {
+        "white": {
+          "type": "boolean"
+        },
+        "black": {
+          "type": "boolean"
+        }
+      }
+    },
+    "error_code": {
+      "enum": [
+        "UNAUTHORISED",
+        "NOT_A_PLAYER",
+        "BAD_ORIGIN",
+        "UPGRADE_REQUIRED",
+        "BAD_REQUEST",
+        "GAME_NOT_FOUND",
+        "NOT_FOUND",
+        "METHOD_NOT_ALLOWED",
+        "INTERNAL",
+        "BAD_MESSAGE",
+        "GAME_OVER",
+        "NOT_YOUR_TURN",
+        "STALE_PLY",
+        "BAD_FORMAT",
+        "ILLEGAL_MOVE",
+        "CANNOT_CLAIM",
+        "DRAW_ALREADY_OFFERED",
+        "NO_DRAW_OFFER",
+        "OWN_DRAW_OFFER",
+        "REMATCH_NOT_AVAILABLE",
+        "TAKEBACK_NOT_AVAILABLE",
+        "TAKEBACK_ALREADY_REQUESTED",
+        "NO_TAKEBACK_REQUEST",
+        "OWN_TAKEBACK_REQUEST"
+      ]
+    },
+    "client_hello": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "hello"
+        },
+        "since_ply": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "client_move": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "uci",
+        "ply"
+      ],
+      "properties": {
+        "type": {
+          "const": "move"
+        },
+        "uci": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "ply": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "$comment": "uci is only length-limited here; the regex is checked by the server after turn and ply so that it can return BAD_FORMAT in the documented order."
+    },
+    "client_simple": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "resign",
+            "draw_offer",
+            "draw_accept",
+            "draw_decline",
+            "claim_draw",
+            "takeback_request",
+            "takeback_accept",
+            "takeback_decline",
+            "rematch",
+            "ping"
+          ]
+        }
+      }
+    },
+    "client_message": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/client_hello"
+        },
+        {
+          "$ref": "#/$defs/client_move"
+        },
+        {
+          "$ref": "#/$defs/client_simple"
+        }
+      ]
+    },
+    "server_state": {
+      "type": "object",
+      "required": [
+        "type",
+        "v",
+        "game_id",
+        "you",
+        "players",
+        "fen",
+        "ply",
+        "turn",
+        "moves",
+        "last_move",
+        "legal",
+        "check",
+        "status",
+        "result",
+        "draw_offer_from",
+        "can_claim_draw",
+        "takeback_from",
+        "rematch",
+        "online",
+        "updated_at"
+      ],
+      "properties": {
+        "type": {
+          "const": "state"
+        },
+        "v": {
+          "const": 1
+        },
+        "game_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "you": {
+          "$ref": "#/$defs/colour"
+        },
+        "players": {
+          "type": "object",
+          "required": [
+            "white",
+            "black"
+          ],
+          "properties": {
+            "white": {
+              "$ref": "#/$defs/player_ref"
+            },
+            "black": {
+              "$ref": "#/$defs/player_ref"
+            }
+          }
+        },
+        "fen": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 100
+        },
+        "ply": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "turn": {
+          "$ref": "#/$defs/colour"
+        },
+        "moves": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/move_record"
+          }
+        },
+        "last_move": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/move_record"
+            }
+          ]
+        },
+        "legal": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/uci"
+          },
+          "uniqueItems": true
+        },
+        "check": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        },
+        "draw_offer_from": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/colour"
+            }
+          ]
+        },
+        "can_claim_draw": {
+          "type": "boolean"
+        },
+        "takeback_from": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/colour"
+            }
+          ]
+        },
+        "rematch": {
+          "type": "object",
+          "required": [
+            "white",
+            "black",
+            "game_id"
+          ],
+          "properties": {
+            "white": {
+              "type": "boolean"
+            },
+            "black": {
+              "type": "boolean"
+            },
+            "game_id": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "$ref": "#/$defs/uuid"
+                }
+              ]
+            }
+          }
+        },
+        "online": {
+          "$ref": "#/$defs/online"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/epoch_ms"
+        }
+      }
+    },
+    "server_presence": {
+      "type": "object",
+      "required": [
+        "type",
+        "v",
+        "online"
+      ],
+      "properties": {
+        "type": {
+          "const": "presence"
+        },
+        "v": {
+          "const": 1
+        },
+        "online": {
+          "$ref": "#/$defs/online"
+        }
+      }
+    },
+    "server_error": {
+      "type": "object",
+      "required": [
+        "type",
+        "v",
+        "code",
+        "message",
+        "in_reply_to"
+      ],
+      "properties": {
+        "type": {
+          "const": "error"
+        },
+        "v": {
+          "const": 1
+        },
+        "code": {
+          "$ref": "#/$defs/error_code"
+        },
+        "message": {
+          "type": "string"
+        },
+        "in_reply_to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "server_rematch_ready": {
+      "type": "object",
+      "required": [
+        "type",
+        "v",
+        "game_id"
+      ],
+      "properties": {
+        "type": {
+          "const": "rematch_ready"
+        },
+        "v": {
+          "const": 1
+        },
+        "game_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      }
+    },
+    "server_pong": {
+      "type": "object",
+      "required": [
+        "type",
+        "v",
+        "t"
+      ],
+      "properties": {
+        "type": {
+          "const": "pong"
+        },
+        "v": {
+          "const": 1
+        },
+        "t": {
+          "$ref": "#/$defs/epoch_ms"
+        }
+      }
+    },
+    "server_message": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/server_state"
+        },
+        {
+          "$ref": "#/$defs/server_presence"
+        },
+        {
+          "$ref": "#/$defs/server_error"
+        },
+        {
+          "$ref": "#/$defs/server_rematch_ready"
+        },
+        {
+          "$ref": "#/$defs/server_pong"
+        }
+      ]
+    },
+    "rest_error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error"
+      ],
+      "properties": {
+        "error": {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "$ref": "#/$defs/error_code"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "rest_healthz": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ok",
+        "version",
+        "commit",
+        "env"
+      ],
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{7,40}|dev)$"
+        },
+        "env": {
+          "enum": [
+            "development",
+            "staging",
+            "production"
+          ]
+        }
+      }
+    },
+    "notify_prefs": {
+      "type": "object",
+      "required": [
+        "invites",
+        "your_move",
+        "cooldown_minutes"
+      ],
+      "properties": {
+        "invites": {
+          "type": "boolean"
+        },
+        "your_move": {
+          "type": "boolean"
+        },
+        "cooldown_minutes": {
+          "enum": [
+            5,
+            10,
+            15,
+            30,
+            45,
+            60,
+            120,
+            240,
+            480,
+            720,
+            1440
+          ]
+        }
+      }
+    },
+    "rest_me": {
+      "type": "object",
+      "required": [
+        "player",
+        "name",
+        "notify"
+      ],
+      "properties": {
+        "player": {
+          "$ref": "#/$defs/player_key"
+        },
+        "name": {
+          "$ref": "#/$defs/display_name"
+        },
+        "notify": {
+          "$ref": "#/$defs/notify_prefs"
+        }
+      }
+    },
+    "rest_patch_me_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/display_name"
+        },
+        "notify": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "invites": {
+              "type": "boolean"
+            },
+            "your_move": {
+              "type": "boolean"
+            },
+            "cooldown_minutes": {
+              "enum": [
+                5,
+                10,
+                15,
+                30,
+                45,
+                60,
+                120,
+                240,
+                480,
+                720,
+                1440
+              ]
+            }
+          }
+        }
+      }
+    },
+    "game_summary": {
+      "type": "object",
+      "required": [
+        "id",
+        "white",
+        "black",
+        "you",
+        "status",
+        "result",
+        "ply",
+        "your_turn",
+        "rematch_of",
+        "created_at",
+        "updated_at"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "white": {
+          "$ref": "#/$defs/player_ref"
+        },
+        "black": {
+          "$ref": "#/$defs/player_ref"
+        },
+        "you": {
+          "$ref": "#/$defs/colour"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        },
+        "ply": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "your_turn": {
+          "type": "boolean"
+        },
+        "rematch_of": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/uuid"
+            }
+          ]
+        },
+        "created_at": {
+          "$ref": "#/$defs/epoch_ms"
+        },
+        "updated_at": {
+          "$ref": "#/$defs/epoch_ms"
+        }
+      }
+    },
+    "rest_games_list": {
+      "type": "object",
+      "required": [
+        "games"
+      ],
+      "properties": {
+        "games": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/game_summary"
+          }
+        }
+      }
+    },
+    "rest_create_game_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "colour"
+      ],
+      "properties": {
+        "colour": {
+          "enum": [
+            "white",
+            "black",
+            "random"
+          ]
+        }
+      }
+    },
+    "rest_create_game_response": {
+      "type": "object",
+      "required": [
+        "game",
+        "url"
+      ],
+      "properties": {
+        "game": {
+          "$ref": "#/$defs/game_summary"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^/game/[0-9a-f-]{36}$"
+        }
+      }
+    },
+    "rest_stats": {
+      "type": "object",
+      "required": [
+        "players",
+        "names",
+        "finished_games"
+      ],
+      "properties": {
+        "players": {
+          "type": "object",
+          "required": [
+            "harry",
+            "partner"
+          ],
+          "additionalProperties": false,
+          "patternProperties": {
+            "^(harry|partner)$": {
+              "type": "object",
+              "required": [
+                "wins",
+                "losses",
+                "draws"
+              ],
+              "properties": {
+                "wins": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "losses": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "draws": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          }
+        },
+        "names": {
+          "type": "object",
+          "required": [
+            "harry",
+            "partner"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "harry": {
+              "$ref": "#/$defs/display_name"
+            },
+            "partner": {
+              "$ref": "#/$defs/display_name"
+            }
+          }
+        },
+        "finished_games": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 24,
+      "pattern": "^[^\\u0000-\\u001f\\u007f-\\u009f]*\\S[^\\u0000-\\u001f\\u007f-\\u009f]*$"
+    }
+  }
+}

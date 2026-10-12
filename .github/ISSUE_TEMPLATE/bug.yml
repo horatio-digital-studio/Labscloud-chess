@@ -1,0 +1,46 @@
+name: Bug report
+description: Something on the board or in the lobby isn't right.
+title: "Bug: "
+labels: [bug]
+body:
+  - type: input
+    id: link
+    attributes:
+      label: Game link
+      description: Paste the address of the game (or "lobby").
+      placeholder: https://chess.labscloud.uk/game/…
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device and browser
+      options:
+        - iPhone – Safari
+        - iPhone – Home Screen app
+        - Android – Chrome
+        - Computer – Chrome
+        - Computer – Safari
+        - Computer – Firefox
+        - Other (say below)
+    validations:
+      required: true
+  - type: dropdown
+    id: env
+    attributes:
+      label: Where
+      options:
+        - chess.labscloud.uk (real games)
+        - chess-staging.labscloud.uk (testing)
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      placeholder: I tapped my knight and nothing happened; I expected the dots to show where it could go.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot (optional)
+      description: Drag a screenshot in here, or paste it.

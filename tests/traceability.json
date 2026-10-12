@@ -1,0 +1,1088 @@
+{
+  "_about": "Maps every requirement in docs/requirements.md to the tests or checks that prove it. Prefixes: tests/… = pytest node ID ([*] = every parametrised case); deployed:… = post-deploy check; uat:… = phone acceptance step (build-plan Part E); review:… = PR review checklist item. Status: not_started | partial (automated tests pass; deployed/UAT/review checks outstanding) | failing | passing. scripts/check_traceability.py fails CI if a requirement is missing or a listed pytest node does not exist.",
+  "updated": "2026-10-12",
+  "requirements": [
+    {
+      "id": "REQ-AUTH-01",
+      "priority": "M",
+      "verified_by": [
+        "D",
+        "A"
+      ],
+      "tests": [
+        "deployed:access-login-incognito",
+        "uat:step-1"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-AUTH-02",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "D"
+      ],
+      "tests": [
+        "tests/unit/test_auth.py::test_verify_good_token",
+        "tests/unit/test_auth.py::test_verify_rejects_wrong_alg_missing_kid_unknown_key_and_wrong_signer",
+        "tests/unit/test_auth.py::test_claims_rejected[*]",
+        "tests/unit/test_auth.py::test_rsa_verifies_good_signature_and_rejects_tampering",
+        "tests/unit/test_web.py::test_production_requires_valid_jwt",
+        "deployed:healthz-only-unauthenticated-path"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-AUTH-03",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_auth.py::test_identify_missing_token",
+        "tests/unit/test_auth.py::test_split_token_malformed[*]",
+        "tests/unit/test_web.py::test_everything_else_needs_auth[*]",
+        "tests/integration/test_live.py::test_unauthenticated_request_rejected"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-04",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_auth.py::test_identify_stranger_rejected",
+        "tests/unit/test_auth.py::test_identify_email_case_insensitive",
+        "tests/unit/test_web.py::test_production_requires_valid_jwt",
+        "tests/unit/test_room.py::test_stranger_cannot_connect"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-05",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_auth.py::test_key_cache_refetches_once_a_minute_on_unknown_kid",
+        "tests/unit/test_auth.py::test_key_cache_keeps_keys_on_fetch_failure_or_empty_doc"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-06",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_auth.py::test_dev_bypass_in_development",
+        "tests/unit/test_auth.py::test_dev_bypass_ignored_outside_development[*]",
+        "tests/unit/test_web.py::test_dev_bypass_sets_cookie_and_cookie_works",
+        "tests/integration/test_live.py::test_me_and_name"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-07",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "D"
+      ],
+      "tests": [
+        "tests/unit/test_web.py::test_healthz_without_auth",
+        "tests/integration/test_live.py::test_healthz",
+        "deployed:ci-healthz-smoke"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-AUTH-08",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_web.py::test_ws_checks",
+        "tests/integration/test_live.py::test_upgrade_checks",
+        "tests/unit/test_web.py::test_cross_site_writes_refused"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-09",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_web.py::test_ws_upgrade_ok",
+        "review:auth-identity-flow"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-AUTH-10",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "E"
+      ],
+      "tests": [
+        "tests/unit/test_web.py::test_game_page_has_security_headers",
+        "tests/unit/test_web.py::test_static_headers_file_uses_the_same_csp",
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-AUTH-11",
+      "priority": "M",
+      "verified_by": [
+        "D"
+      ],
+      "tests": [
+        "deployed:workers-dev-and-preview-urls-disabled"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-GAME-01",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_plan_game_colours[*]",
+        "tests/unit/test_lobby.py::test_plan_game_random_uses_chooser_with_both_options",
+        "tests/integration/test_live.py::test_create_list_and_snapshot"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-02",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/integration/test_live.py::test_create_list_and_snapshot",
+        "tests/e2e/test_browser.py::test_lobby_lists_games_for_both[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-03",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_list_games_order_filter_and_your_turn",
+        "tests/integration/test_live.py::test_create_list_and_snapshot",
+        "tests/unit/test_lobby.py::test_late_summary_never_overwrites_newer",
+        "tests/unit/test_room.py::test_hello_repairs_lobby_index_after_failed_summary"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-04",
+      "priority": "M",
+      "verified_by": [
+        "I",
+        "E"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_list_games_order_filter_and_your_turn",
+        "tests/integration/test_live.py::test_create_list_and_snapshot",
+        "tests/e2e/test_browser.py::test_lobby_lists_games_for_both[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-05",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_stats",
+        "tests/unit/test_room.py::test_resign_ends_game_and_lobby_counts_it",
+        "tests/unit/test_room.py::test_hello_repairs_lobby_index_after_failed_summary"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-06",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_pgn.py::test_scholars_mate_exact",
+        "tests/unit/test_properties.py::test_p5_pgn_reparses_to_same_moves",
+        "tests/unit/test_web.py::test_pgn_download"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-07",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_web.py::test_snapshot",
+        "tests/integration/test_live.py::test_unknown_game_is_404",
+        "tests/e2e/test_browser.py::test_unknown_game[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-08",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_plan_game_colours[*]",
+        "tests/unit/test_lobby.py::test_ids_unique"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-GAME-09",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I",
+        "E"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_validate_name_accepts[*]",
+        "tests/unit/test_lobby.py::test_validate_name_rejects[*]",
+        "tests/unit/test_lobby.py::test_default_names_from_config_then_saved",
+        "tests/unit/test_room.py::test_hello_picks_up_renamed_player",
+        "tests/integration/test_live.py::test_me_and_name",
+        "tests/e2e/test_browser.py::test_lobby_name_box_and_emails[*]",
+        "tests/unit/test_room.py::test_snapshot_and_pgn_use_current_names"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-01",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_rules_catalogue.py::test_position[*]",
+        "tests/unit/test_properties.py::test_p1_p3_p4_random_games_match_oracle"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-02",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_wrapper_cases.py::test_wrapper_case[*]",
+        "tests/unit/test_engine.py::test_resend_same_ply_stale",
+        "tests/integration/test_live.py::test_play_broadcast_and_errors"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-03",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_rejected_move_leaves_state_unchanged",
+        "tests/unit/test_wrapper_cases.py::test_wrapper_case[*]",
+        "tests/unit/test_room.py::test_errors_go_only_to_sender",
+        "tests/integration/test_live.py::test_play_broadcast_and_errors"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-04",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_castling_canonical_only",
+        "tests/unit/test_properties.py::test_p2_only_legal_ucis_accepted"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-05",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_promotion_requires_piece"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-06",
+      "priority": "M",
+      "verified_by": [
+        "I",
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_eviction_gives_identical_state",
+        "tests/integration/test_live.py::test_reconnect_gets_identical_state",
+        "review:persist-before-broadcast"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-RULE-07",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_status_order_checkmate_reported",
+        "tests/unit/test_engine.py::test_status_order_mate_beats_halfmove_clock",
+        "tests/unit/test_engine.py::test_fivefold_ends_game_automatically",
+        "tests/unit/test_rules_catalogue.py::test_position[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-08",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_can_claim_draw_threefold",
+        "tests/unit/test_engine.py::test_can_claim_draw_fifty",
+        "tests/unit/test_properties.py::test_p1_p3_p4_random_games_match_oracle"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-09",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_claim_draw_ends_game",
+        "tests/unit/test_engine.py::test_can_claim_draw_only_for_side_to_move"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RULE-10",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_properties.py::test_p1_p3_p4_random_games_match_oracle",
+        "tests/unit/test_properties.py::test_p7_takebacks_match_board_pop",
+        "review:no-replay-on-hot-path"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-ACT-01",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_resign_on_either_turn",
+        "tests/unit/test_room.py::test_resign_ends_game_and_lobby_counts_it",
+        "tests/integration/test_live.py::test_takeback_resign_rematch_and_pgn"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-02",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_draw_offer_recorded",
+        "tests/unit/test_actions.py::test_repeat_offer_rejected"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-03",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_draw_accept",
+        "tests/e2e/test_browser.py::test_draw_offer_and_takeback_banners[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-04",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_no_draw_offer",
+        "tests/unit/test_actions.py::test_own_draw_offer"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-05",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_crossing_offers_accept"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-06",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_draw_decline_clears",
+        "tests/unit/test_actions.py::test_offer_cleared_by_recipient_move",
+        "tests/unit/test_actions.py::test_offer_not_cleared_by_offerer_move"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-08",
+      "priority": "M",
+      "verified_by": [
+        "I",
+        "E"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_rematch_votes_and_ready",
+        "tests/unit/test_room.py::test_rematch_flow",
+        "tests/unit/test_room.py::test_rematch_retries_if_lobby_failed",
+        "tests/unit/test_lobby.py::test_plan_rematch_swaps_and_is_idempotent",
+        "tests/integration/test_live.py::test_takeback_resign_rematch_and_pgn",
+        "tests/e2e/test_browser.py::test_resign_confirmation_and_rematch[*]",
+        "tests/unit/test_room.py::test_overlapping_rematch_requests_create_one_game",
+        "tests/unit/test_lobby.py::test_rematch_reservation_released_if_room_fails"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-09",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_rematch_before_end_rejected"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-10",
+      "priority": "M",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_actions_after_game_over_rejected"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-11",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_takeback_request_recorded",
+        "tests/unit/test_actions.py::test_takeback_not_available_without_own_move",
+        "tests/unit/test_actions.py::test_takeback_already_requested",
+        "tests/e2e/test_browser.py::test_takeback_outline_marks_requesters_move[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-12",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_takeback_one_ply_on_opponents_turn",
+        "tests/unit/test_actions.py::test_takeback_two_plies_on_requesters_turn",
+        "tests/unit/test_actions.py::test_takeback_to_start_restores_start_fen",
+        "tests/unit/test_actions.py::test_takeback_restores_castling_rights",
+        "tests/unit/test_actions.py::test_takeback_clears_draw_offer",
+        "tests/unit/test_properties.py::test_p7_takebacks_match_board_pop",
+        "tests/integration/test_live.py::test_takeback_resign_rematch_and_pgn"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-13",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_takeback_cleared_by_move",
+        "tests/unit/test_actions.py::test_no_takeback_request",
+        "tests/unit/test_actions.py::test_own_takeback_request"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-ACT-14",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_actions.py::test_takeback_removes_moves_pgn_and_counts",
+        "tests/unit/test_properties.py::test_p7_takebacks_match_board_pop",
+        "tests/integration/test_live.py::test_takeback_resign_rematch_and_pgn"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-01",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_move_broadcasts_state_to_everyone",
+        "tests/integration/test_live.py::test_play_broadcast_and_errors"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-02",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_hello_returns_full_state"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-03",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_states_shape_and_legal_visibility",
+        "tests/unit/test_engine.py::test_terminal_state_has_no_legal_moves",
+        "tests/integration/test_live.py::test_create_list_and_snapshot"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-04",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_presence_on_connect_and_disconnect",
+        "tests/integration/test_live.py::test_presence_and_two_sockets_per_player"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-05",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_two_sockets_for_one_player",
+        "tests/integration/test_live.py::test_presence_and_two_sockets_per_player"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-06",
+      "priority": "M",
+      "verified_by": [
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_eviction_gives_identical_state",
+        "tests/unit/test_properties.py::test_p1_p3_p4_random_games_match_oracle",
+        "tests/integration/test_live.py::test_reconnect_gets_identical_state"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-07",
+      "priority": "M",
+      "verified_by": [
+        "A"
+      ],
+      "tests": [
+        "uat:step-3"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-RT-08",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_protocol.py::test_parse_rejects[*]",
+        "tests/unit/test_protocol.py::test_size_limit",
+        "tests/unit/test_properties.py::test_p6_protocol_round_trip_and_extra_fields",
+        "tests/unit/test_room.py::test_bad_message[*]",
+        "tests/integration/test_live.py::test_bad_messages"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-RT-09",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "I"
+      ],
+      "tests": [
+        "tests/unit/test_engine.py::test_resend_same_ply_stale",
+        "tests/integration/test_live.py::test_play_broadcast_and_errors"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-01",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]",
+        "tests/e2e/test_browser.py::test_menu_flip_and_pgn_link[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-02",
+      "priority": "M",
+      "verified_by": [
+        "E",
+        "A"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]",
+        "tests/e2e/test_browser.py::test_drag_and_drop[*]",
+        "uat:step-6"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-UI-03",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-04",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_promotion_picker[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-05",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]",
+        "tests/e2e/test_browser.py::test_checkmate_and_error_toast[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-06",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_reconnects_and_locks_input_while_down[*]",
+        "tests/e2e/test_browser.py::test_move_stays_pending_through_unrelated_state[*]",
+        "tests/e2e/test_browser.py::test_signed_out_pill_fits_narrow_phone[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-07",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_reconnects_and_locks_input_while_down[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-08",
+      "priority": "S",
+      "verified_by": [
+        "A"
+      ],
+      "tests": [
+        "uat:step-10"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-UI-09",
+      "priority": "S",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_sound_off_by_default_and_remembered[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-10",
+      "priority": "M",
+      "verified_by": [
+        "E",
+        "A"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_narrow_and_wide_phones_do_not_scroll_sideways[*]",
+        "tests/e2e/test_browser.py::test_signed_out_pill_fits_narrow_phone[*]",
+        "uat:step-3"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-UI-11",
+      "priority": "M",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_resign_confirmation_and_rematch[*]",
+        "tests/e2e/test_browser.py::test_screen_reader_activation_and_keyboard_resign[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-12",
+      "priority": "S",
+      "verified_by": [
+        "E"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_keyboard_play[*]",
+        "tests/e2e/test_browser.py::test_screen_reader_activation_and_keyboard_resign[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-UI-13",
+      "priority": "S",
+      "verified_by": [
+        "A"
+      ],
+      "tests": [
+        "uat:add-to-home-screen"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-UI-14",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_move_stays_pending_through_unrelated_state[*]",
+        "review:client-has-no-rules-logic"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NOTIFY-01",
+      "priority": "S",
+      "verified_by": [
+        "U",
+        "D"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_create_game_rpc_and_invite_email",
+        "tests/unit/test_lobby.py::test_no_invite_when_disabled_or_opted_out",
+        "tests/unit/test_notify.py::test_text_matches_email_copy_doc[*]",
+        "deployed:invite-received"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NOTIFY-02",
+      "priority": "S",
+      "verified_by": [
+        "U",
+        "D"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_nudge_only_when_opponent_offline",
+        "tests/unit/test_lobby.py::test_nudge_throttle_uses_player_cooldown",
+        "tests/unit/test_lobby.py::test_nudge_rpc_respects_settings",
+        "deployed:nudge-received"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NOTIFY-03",
+      "priority": "S",
+      "verified_by": [
+        "U",
+        "D"
+      ],
+      "tests": [
+        "tests/unit/test_room.py::test_game_over_email_with_pgn",
+        "tests/unit/test_lobby.py::test_game_over_rpc_emails_both",
+        "deployed:game-over-received"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NOTIFY-04",
+      "priority": "S",
+      "verified_by": [
+        "U"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_email_failure_does_not_break_creation"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-NOTIFY-05",
+      "priority": "S",
+      "verified_by": [
+        "U",
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_game_over_rpc_emails_both",
+        "tests/unit/test_lobby.py::test_create_game_rpc_and_invite_email",
+        "review:email-binding-allowlist"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NOTIFY-06",
+      "priority": "S",
+      "verified_by": [
+        "U",
+        "E"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_every_cooldown_step_accepted[*]",
+        "tests/unit/test_lobby.py::test_cooldown_steps_match_requirement",
+        "tests/unit/test_lobby.py::test_update_me_rejects_and_changes_nothing[*]",
+        "tests/e2e/test_browser.py::test_lobby_name_box_and_emails[*]"
+      ],
+      "status": "passing"
+    },
+    {
+      "id": "REQ-NFR-01",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "review:free-plan-only"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-NFR-02",
+      "priority": "M",
+      "verified_by": [
+        "D"
+      ],
+      "tests": [
+        "deployed:s04-cpu-replay"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-NFR-03",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "review:no-pi-or-pc-dependency"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-NFR-04",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "review:versions-pinned"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-NFR-05",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_lobby.py::test_migrate_idempotent_across_instances",
+        "review:additive-migrations"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NFR-06",
+      "priority": "M",
+      "verified_by": [
+        "U",
+        "R"
+      ],
+      "tests": [
+        "tests/unit/test_notify.py::test_log_drops_sensitive_fields",
+        "tests/unit/test_room.py::test_room_logs_carry_game_id_and_ply",
+        "review:logging"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NFR-07",
+      "priority": "M",
+      "verified_by": [
+        "E",
+        "A"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_orientation_tap_move_and_broadcast[*]",
+        "uat:step-1"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-NFR-08",
+      "priority": "M",
+      "verified_by": [
+        "E",
+        "R"
+      ],
+      "tests": [
+        "tests/e2e/test_browser.py::test_lobby_name_box_and_emails[*]",
+        "review:vendored-assets"
+      ],
+      "status": "partial"
+    },
+    {
+      "id": "REQ-OPS-01",
+      "priority": "M",
+      "verified_by": [
+        "D"
+      ],
+      "tests": [
+        "deployed:ci-healthz-smoke"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-OPS-02",
+      "priority": "M",
+      "verified_by": [
+        "D"
+      ],
+      "tests": [
+        "deployed:rollback-dry-run"
+      ],
+      "status": "not_started"
+    },
+    {
+      "id": "REQ-OPS-03",
+      "priority": "M",
+      "verified_by": [
+        "R"
+      ],
+      "tests": [
+        "review:workflow-triggers"
+      ],
+      "status": "not_started"
+    }
+  ]
+}

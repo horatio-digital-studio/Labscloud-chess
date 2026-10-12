@@ -1,0 +1,102 @@
+# Tests every change. Deploy workflows call this first and only deploy if it passes.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main] # main is tested by deploy-staging.yml, which calls this workflow
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  fast:
+    name: Lint, types, unit, contract, JS, traceability
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Fast gates
+        run: uv run ./scripts/check.sh
+
+  integration:
+    name: Integration (dev server and pywrangler dev)
+    needs: fast
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Against the Python dev server
+        run: uv run pytest tests/integration -o addopts="-q --strict-markers"
+      - name: Start pywrangler dev (the real Python Workers runtime, locally)
+        run: |
+          nohup uv run pywrangler dev --port 8787 --ip 127.0.0.1 > wrangler-dev.log 2>&1 &
+          for i in $(seq 1 120); do
+            if curl -fsS http://localhost:8787/healthz > /dev/null 2>&1; then echo "ready after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          cat wrangler-dev.log; exit 1
+      - name: Against pywrangler dev
+        env:
+          BASE_URL: http://localhost:8787
+        run: uv run pytest tests/integration -o addopts="-q --strict-markers"
+      - name: Wrangler dev log
+        if: always()
+        run: cat wrangler-dev.log || true
+
+  e2e:
+    name: Browser tests (Chromium, WebKit)
+    needs: fast
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Install browsers
+        run: uv run playwright install --with-deps chromium webkit
+      - name: Start pywrangler dev
+        run: |
+          nohup uv run pywrangler dev --port 8787 --ip 127.0.0.1 > wrangler-dev.log 2>&1 &
+          for i in $(seq 1 120); do
+            if curl -fsS http://localhost:8787/healthz > /dev/null 2>&1; then echo "ready after ${i}s"; exit 0; fi
+            sleep 1
+          done
+          cat wrangler-dev.log; exit 1
+      - name: Browser tests
+        env:
+          BASE_URL: http://localhost:8787
+          E2E_BROWSERS: chromium,webkit
+          E2E_ARTIFACTS: e2e-artifacts
+        run: uv run pytest tests/e2e -o addopts="-q --strict-markers"
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-screenshots
+          path: e2e-artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Wrangler dev log
+        if: always()
+        run: cat wrangler-dev.log || true
+
+  bundle:
+    name: Bundle check (deploy --dry-run)
+    needs: fast
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - name: Dry-run both environments
+        run: |
+          uv run pywrangler deploy --dry-run --env staging --outdir dist/staging
+          uv run pywrangler deploy --dry-run --env production --outdir dist/production

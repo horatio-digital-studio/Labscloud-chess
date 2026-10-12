@@ -1,0 +1,9 @@
+{
+  "name": "labscloud-chess",
+  "private": true,
+  "description": "Tooling only: pins the Wrangler CLI that pywrangler runs (npx uses this copy). No browser bundle.",
+  "engines": { "node": ">=22" },
+  "devDependencies": {
+    "wrangler": "4.147.0"
+  }
+}

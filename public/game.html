@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#22170f" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Chess" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Game · labscloud chess</title>
+    <link rel="preload" href="/fonts/noto-sans-symbols-2-chess.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <script type="module" src="/js/game.js"></script>
+  </head>
+  <body>
+    <main class="page page--game">
+      <header class="gamebar">
+        <a class="gamebar__back" href="/">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+          Games
+        </a>
+        <button type="button" class="pill" id="conn" disabled data-testid="connection">
+          <span class="pill__dot" aria-hidden="true"></span><span id="conn-text">Connecting…</span>
+        </button>
+        <div class="gamebar__menu">
+          <button type="button" class="icon-btn" id="menu-button" aria-label="Game menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu">
+            <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h.01M12 12h.01M19 12h.01"></path></svg>
+          </button>
+          <ul class="menu" id="menu" role="menu" hidden>
+            <li role="none"><button type="button" class="menu__item" role="menuitem" id="menu-flip">Flip board</button></li>
+            <li role="none"><button type="button" class="menu__item" role="menuitem" id="menu-sound">Sound: off</button></li>
+            <li role="none"><a class="menu__item" role="menuitem" id="menu-pgn" href="#" download>Download PGN</a></li>
+          </ul>
+        </div>
+      </header>
+
+      <div id="loading" class="status-line">Loading game…</div>
+
+      <section class="notfound" id="notfound" hidden>
+        <h1>This game doesn't exist.</h1>
+        <p class="hint" id="notfound-detail">Check the link, or start a new game from the lobby.</p>
+        <a class="btn btn--primary" href="/">Back to games</a>
+      </section>
+
+      <div class="strip" id="opp-strip" hidden>
+        <span class="avatar" id="opp-avatar" aria-hidden="true"></span>
+        <span class="strip__who">
+          <span class="strip__name" id="opp-name"></span>
+          <span class="strip__colour" id="opp-colour"></span>
+        </span>
+        <span class="presence" id="opp-presence"><span class="presence__dot" aria-hidden="true"></span><span id="opp-presence-text">offline</span></span>
+      </div>
+
+      <figure class="board-frame" id="board-frame" hidden>
+        <div class="board" id="board" role="group" aria-label="Chess board" data-testid="board"></div>
+      </figure>
+
+      <div class="strip" id="me-strip" hidden>
+        <span class="avatar avatar--me" id="me-avatar" aria-hidden="true"></span>
+        <span class="strip__who">
+          <span class="strip__name" id="me-name"></span>
+          <span class="strip__colour" id="me-colour"></span>
+        </span>
+        <span class="turn-badge" id="turn-badge" data-testid="turn" hidden></span>
+      </div>
+
+      <p class="status-line" id="status" data-testid="status" hidden></p>
+      <div id="banners" class="section" data-testid="banners"></div>
+      <ol class="moves" id="moves" aria-label="Moves" data-testid="moves" hidden></ol>
+      <div class="actions" id="actions" hidden></div>
+
+      <div class="toast-region" id="toasts" role="status" aria-live="polite"></div>
+      <div class="visually-hidden" id="announcer" aria-live="assertive" aria-atomic="true"></div>
+    </main>
+  </body>
+</html>

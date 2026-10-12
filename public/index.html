@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#22170f" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Chess" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>labscloud chess</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <script type="module" src="/js/lobby.js"></script>
+  </head>
+  <body>
+    <main class="page page--lobby">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">&#x265E;&#xFE0E;</span>
+          <h1 class="brand__name">labscloud chess</h1>
+        </div>
+        <span class="chip" id="me-chip" data-testid="me-chip" hidden></span>
+      </header>
+
+      <div class="banner banner--error" id="load-error" role="alert" hidden>
+        <span class="banner__text" id="load-error-text">Couldn't load your games.</span>
+        <div class="banner__actions">
+          <button type="button" class="btn btn--small" id="retry">Retry</button>
+        </div>
+      </div>
+
+      <section class="card" aria-labelledby="name-heading">
+        <h2 class="card__title" id="name-heading">Your name</h2>
+        <label class="hint" for="name-input">Shown to your opponent on the board and in emails</label>
+        <form class="name-row" id="name-form" novalidate>
+          <input id="name-input" name="name" type="text" autocomplete="nickname" maxlength="64" spellcheck="false" aria-describedby="name-error" disabled />
+          <button type="submit" class="btn btn--outline-accent" id="name-save" disabled>Save</button>
+        </form>
+        <p class="form-error" id="name-error" hidden>Names need 1–24 characters.</p>
+        <p class="saved-note" id="name-saved" role="status" hidden>Saved</p>
+      </section>
+
+      <section class="card" aria-labelledby="h2h-heading">
+        <h2 class="eyebrow" id="h2h-heading">Head to head</h2>
+        <div class="h2h" data-testid="h2h">
+          <div class="h2h__cell">
+            <span class="h2h__num h2h__num--me" id="h2h-me">–</span>
+            <span class="h2h__label" id="h2h-me-name">You</span>
+          </div>
+          <div class="h2h__cell">
+            <span class="h2h__num h2h__num--draws" id="h2h-draws">–</span>
+            <span class="h2h__label h2h__label--draws">drawn</span>
+          </div>
+          <div class="h2h__cell">
+            <span class="h2h__num" id="h2h-opp">–</span>
+            <span class="h2h__label" id="h2h-opp-name">Opponent</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="new-heading">
+        <h2 class="eyebrow" id="new-heading">New game — you play</h2>
+        <div class="segmented" role="group" aria-labelledby="new-heading" id="colour-choice">
+          <button type="button" data-colour="white" aria-pressed="false">White</button>
+          <button type="button" data-colour="random" aria-pressed="true">Random</button>
+          <button type="button" data-colour="black" aria-pressed="false">Black</button>
+        </div>
+        <button type="button" class="btn btn--primary" id="start" data-testid="start" disabled>Start a new game</button>
+        <p class="form-error" id="start-error" role="alert" hidden>Couldn't start the game. Try again.</p>
+      </section>
+
+      <div id="games" aria-busy="true">
+        <div class="section">
+          <div class="skeleton"></div>
+          <div class="skeleton"></div>
+        </div>
+      </div>
+
+      <section class="card" aria-labelledby="mail-heading">
+        <h2 class="card__title" id="mail-heading">Emails</h2>
+        <div class="switch-row">
+          <span id="invites-label">Email me when I'm invited</span>
+          <button type="button" class="switch" role="switch" id="invites" aria-checked="false" aria-labelledby="invites-label" disabled>
+            <span class="switch__knob" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="switch-row">
+          <span id="yourmove-label">Email me when it's my move</span>
+          <button type="button" class="switch" role="switch" id="your-move" aria-checked="false" aria-labelledby="yourmove-label" disabled>
+            <span class="switch__knob" aria-hidden="true"></span>
+          </button>
+        </div>
+        <div class="stepper-row" id="gap-row">
+          <span class="stepper-row__label">
+            <span id="gap-label">Gap between move emails</span>
+            <span class="hint">At most one email per gap</span>
+          </span>
+          <div class="stepper" role="group" aria-labelledby="gap-label">
+            <button type="button" id="gap-down" aria-label="Shorter gap" disabled>−</button>
+            <output id="gap-value" aria-live="polite" data-testid="gap">30 min</output>
+            <button type="button" id="gap-up" aria-label="Longer gap" disabled>+</button>
+          </div>
+        </div>
+        <p class="form-error" id="mail-error" role="alert" hidden>Couldn't save that change. Try again.</p>
+      </section>
+    </main>
+  </body>
+</html>

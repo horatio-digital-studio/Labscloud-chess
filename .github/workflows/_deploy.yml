@@ -1,0 +1,112 @@
+# Reusable deploy: pushes the Worker and its secrets in one step, then checks /healthz
+# reports the commit just deployed (REQ-OPS-01). Called by the three workflows below.
+name: Deploy (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: staging or production
+        required: true
+        type: string
+      ref:
+        description: Git ref (commit SHA or tag) to deploy
+        required: true
+        type: string
+      version:
+        description: Version label shown by /healthz
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    # Never run two deploys of the same environment at once; queue instead of cancelling.
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    env:
+      TARGET_ENV: ${{ inputs.environment }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Check inputs
+        run: |
+          case "$TARGET_ENV" in staging|production) ;; *) echo "bad environment: $TARGET_ENV"; exit 1;; esac
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repository secrets (runbook, setup step H-03)."
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: ./.github/actions/setup
+      - name: Work out commit and host
+        id: meta
+        run: |
+          echo "commit=$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+          if [ "$TARGET_ENV" = production ]; then
+            echo "host=chess.labscloud.uk" >> "$GITHUB_OUTPUT"
+          else
+            echo "host=chess-staging.labscloud.uk" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Write Worker secrets file
+        env:
+          PLAYERS_JSON: ${{ secrets.PLAYERS_JSON }}
+          ACCESS_TEAM_DOMAIN: ${{ secrets.ACCESS_TEAM_DOMAIN }}
+          # Both are passed; the script picks one by environment with no fallback, so a
+          # missing production AUD fails the deploy instead of silently using staging's.
+          ACCESS_AUD_PROD: ${{ secrets.ACCESS_AUD_PROD }}
+          ACCESS_AUD_STAGING: ${{ secrets.ACCESS_AUD_STAGING }}
+        run: |
+          uv run python - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path[:0] = ["src"]
+          from app.config import PlayerDirectory
+          aud_name = "ACCESS_AUD_PROD" if os.environ["TARGET_ENV"] == "production" else "ACCESS_AUD_STAGING"
+          missing = [n for n in ("PLAYERS_JSON", "ACCESS_TEAM_DOMAIN", aud_name) if not os.environ.get(n, "").strip()]
+          if missing:
+              sys.exit(f"::error::Missing repository secrets: {', '.join(missing)} (runbook, setup steps H-04/H-05).")
+          PlayerDirectory.from_json(os.environ["PLAYERS_JSON"])  # fail here, not at runtime
+          team = os.environ["ACCESS_TEAM_DOMAIN"].strip().rstrip("/")
+          if not team.startswith("https://"):
+              team = "https://" + team
+          path = Path(os.environ["RUNNER_TEMP"]) / "worker-secrets.json"
+          path.write_text(json.dumps({
+              "PLAYERS_JSON": os.environ["PLAYERS_JSON"],
+              "ACCESS_TEAM_DOMAIN": team,
+              "ACCESS_AUD": os.environ[aud_name].strip(),
+          }))
+          path.chmod(0o600)
+          PY
+      - name: Deploy
+        run: >
+          uv run pywrangler deploy
+          --env "$TARGET_ENV"
+          --secrets-file "$RUNNER_TEMP/worker-secrets.json"
+          --var "COMMIT:${{ steps.meta.outputs.commit }}"
+          --var "VERSION:${{ inputs.version }}"
+      - name: Remove secrets file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/worker-secrets.json"
+      - name: Smoke test /healthz
+        env:
+          HOST: ${{ steps.meta.outputs.host }}
+          WANT: ${{ steps.meta.outputs.commit }}
+        run: |
+          for i in $(seq 1 20); do
+            body=$(curl -fsS "https://$HOST/healthz" || true)
+            echo "attempt $i: $body"
+            if echo "$body" | python3 -c "import json,os,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('ok') and d.get('commit')==os.environ['WANT'] else 1)" 2>/dev/null; then
+              echo "Deployed $WANT to $HOST"; exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::https://$HOST/healthz did not report commit $WANT. Check the Access Bypass policy for /healthz (runbook H-04)."
+          exit 1

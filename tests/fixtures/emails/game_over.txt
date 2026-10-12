@@ -1,0 +1,17 @@
+Hi Partner,
+
+Harry won by checkmate.
+
+Rematch or review: https://chess-staging.labscloud.uk/game/7d3c9a2e-5b1f-4c8e-9a0d-2f6b8e1c4a77
+
+Moves (PGN):
+[Event "labscloud-chess"]
+[Site "chess.labscloud.uk"]
+[Date "2026.10.12"]
+[White "Harry"]
+[Black "Partner"]
+[Result "1-0"]
+
+1. e4 e5 2. Qh5 Nc6 3. Bc4 Nf6 4. Qxf7# 1-0
+
+— labscloud chess

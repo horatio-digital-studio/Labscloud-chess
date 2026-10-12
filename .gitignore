@@ -1,0 +1,23 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+python_modules/
+src/vendor/
+
+# Node / Wrangler
+node_modules/
+.wrangler/
+dist/
+
+# Local secrets and scratch
+.dev.vars
+.env
+*.secrets.json
+e2e-artifacts/

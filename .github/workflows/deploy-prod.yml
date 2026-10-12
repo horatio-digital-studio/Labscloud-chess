@@ -1,0 +1,23 @@
+# Production deploys only from a version tag, e.g. `git tag v0.1.0 && git push --tags`
+# (REQ-OPS-03). Harry says "ship it" before a tag is pushed.
+name: Deploy production
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: test
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: production
+      ref: ${{ github.ref_name }}
+      version: ${{ github.ref_name }}
+    secrets: inherit

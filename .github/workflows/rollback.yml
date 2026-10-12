@@ -1,0 +1,34 @@
+# Manual: redeploy an earlier tag to production (REQ-OPS-02). Actions tab → Rollback
+# production → Run workflow → enter the tag (e.g. v0.1.0). Tests are skipped: the tag
+# passed them when it was released.
+name: Rollback production
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to redeploy (e.g. v0.1.0)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Tag must look like a release
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "::error::'$TAG' is not a vX.Y.Z tag"; exit 1; fi
+
+  deploy:
+    needs: check
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: production
+      ref: refs/tags/${{ inputs.tag }}
+      version: ${{ inputs.tag }}
+    secrets: inherit
