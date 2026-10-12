@@ -71,7 +71,8 @@ class Player:
 
     def _console(self, message: Any) -> None:
         if message.type == "error":
-            self.problems.append(f"console: {message.text}")
+            where = message.location.get("url") or "unknown source"
+            self.problems.append(f"console: {message.text} [{where}]")
 
     def goto(self, path: str) -> None:
         self.page.goto(f"{self.base_url}{path}")
@@ -100,7 +101,11 @@ class Player:
         if ARTIFACTS:
             ARTIFACTS.mkdir(parents=True, exist_ok=True)
             browser = self.context.browser.browser_type.name if self.context.browser else "browser"
-            self.page.screenshot(path=str(ARTIFACTS / f"{browser}-{name}.png"), full_page=True)
+            # caret="initial": by default Playwright injects a stylesheet to hide the caret, and
+            # WebKit applies the page's CSP to it, which would log a false CSP violation.
+            self.page.screenshot(
+                path=str(ARTIFACTS / f"{browser}-{name}.png"), full_page=True, caret="initial"
+            )
 
 
 @pytest.fixture
