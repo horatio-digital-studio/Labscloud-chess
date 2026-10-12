@@ -75,7 +75,10 @@ jobs:
           BASE_URL: http://localhost:8787
           E2E_BROWSERS: chromium,webkit
           E2E_ARTIFACTS: e2e-artifacts
-        run: uv run pytest tests/e2e -o addopts="-q --strict-markers"
+        run: |
+          set -o pipefail
+          uv run pytest tests/e2e -o addopts="-q --strict-markers -rfE --tb=short" 2>&1 | tee e2e.log \
+            || { uv run python scripts/annotate_failure.py "Browser tests failed" e2e.log 120; exit 1; }
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -87,6 +90,9 @@ jobs:
       - name: Wrangler dev log
         if: always()
         run: cat wrangler-dev.log || true
+      - name: Annotate wrangler dev log on failure
+        if: failure()
+        run: uv run python scripts/annotate_failure.py "pywrangler dev log (e2e job)" wrangler-dev.log 60
 
   bundle:
     name: Bundle check (deploy --dry-run)
