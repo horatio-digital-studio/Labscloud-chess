@@ -116,13 +116,21 @@ jobs:
           HOST: ${{ steps.meta.outputs.host }}
           WANT: ${{ steps.meta.outputs.commit }}
         run: |
-          for i in $(seq 1 20); do
-            body=$(curl -fsS "https://$HOST/healthz" || true)
-            echo "attempt $i: $body"
-            if echo "$body" | python3 -c "import json,os,sys; d=json.load(sys.stdin); sys.exit(0 if d.get('ok') and d.get('commit')==os.environ['WANT'] else 1)" 2>/dev/null; then
+          last=""
+          for i in $(seq 1 30); do
+            # A brand-new custom domain can take a few minutes to get its certificate.
+            meta=$(curl -sS -o body.json -w '%{http_code} %{redirect_url}' "https://$HOST/healthz" 2>curl.err) || meta="curl-failed: $(head -c 200 curl.err)"
+            echo "attempt $i: $meta"
+            if python3 -c "import json,os,sys; d=json.load(open('body.json')); sys.exit(0 if d.get('ok') and d.get('commit')==os.environ['WANT'] else 1)" 2>/dev/null; then
               echo "Deployed $WANT to $HOST"; exit 0
             fi
-            sleep 6
+            last="$meta | body: $(head -c 160 body.json 2>/dev/null | tr -d '\r\n')"
+            sleep 10
           done
-          echo "::error::https://$HOST/healthz did not report commit $WANT. Check the Access Bypass policy for /healthz (runbook H-04)."
+          case "$last" in
+            *cloudflareaccess.com*) hint="Access is asking for a login: add the Bypass policy for /healthz (runbook H-04)." ;;
+            curl-failed*) hint="The host is not reachable yet (DNS or certificate still being set up); re-run in a few minutes." ;;
+            *) hint="See the response above." ;;
+          esac
+          echo "::error title=Smoke test::https://$HOST/healthz did not report commit $WANT. Last response: $last. $hint"
           exit 1
