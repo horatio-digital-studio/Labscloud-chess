@@ -68,18 +68,34 @@ jobs:
           import json, os, sys
           from pathlib import Path
           sys.path[:0] = ["src"]
-          from app.config import PlayerDirectory
+          from app.config import ConfigError, PlayerDirectory
+
+          def fail(message):
+              # Annotations go to stdout so the checks API shows them. Never print secret values.
+              print(f"::error title=Worker secrets::{message}")
+              sys.exit(1)
+
           aud_name = "ACCESS_AUD_PROD" if os.environ["TARGET_ENV"] == "production" else "ACCESS_AUD_STAGING"
           missing = [n for n in ("PLAYERS_JSON", "ACCESS_TEAM_DOMAIN", aud_name) if not os.environ.get(n, "").strip()]
           if missing:
-              sys.exit(f"::error::Missing repository secrets: {', '.join(missing)} (runbook, setup steps H-04/H-05).")
-          PlayerDirectory.from_json(os.environ["PLAYERS_JSON"])  # fail here, not at runtime
+              fail(f"Missing or empty repository secrets: {', '.join(missing)} (runbook, setup steps H-04/H-05).")
+          raw = os.environ["PLAYERS_JSON"].strip()
+          if any(q in raw for q in "\u201c\u201d\u2018\u2019"):
+              fail("PLAYERS_JSON contains curly quotes (phones add these). Retype it with plain \" quotes.")
+          try:
+              json.loads(raw)
+          except json.JSONDecodeError as exc:
+              fail(f"PLAYERS_JSON is not valid JSON: {exc.msg} at character {exc.pos} of {len(raw)}.")
+          try:
+              PlayerDirectory.from_json(raw)  # fail here, not at runtime
+          except ConfigError as exc:
+              fail(str(exc))
           team = os.environ["ACCESS_TEAM_DOMAIN"].strip().rstrip("/")
           if not team.startswith("https://"):
               team = "https://" + team
           path = Path(os.environ["RUNNER_TEMP"]) / "worker-secrets.json"
           path.write_text(json.dumps({
-              "PLAYERS_JSON": os.environ["PLAYERS_JSON"],
+              "PLAYERS_JSON": raw,
               "ACCESS_TEAM_DOMAIN": team,
               "ACCESS_AUD": os.environ[aud_name].strip(),
           }))
