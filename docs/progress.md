@@ -84,3 +84,19 @@ Newest session first. Each entry: what was done, decisions, what's next, open qu
 - 30-minute nudge cooldown OK?
 
 **CI:** not set up yet.
+
+---
+
+## 2026-10-12: first push and first CI run
+
+Repo: `horatio-digital-studio/Labscloud-chess`, `main` pushed.
+
+**CI on `main` (all green):** fast gates, bundle dry-run (both environments), integration against the dev server **and `pywrangler dev`**, and browser tests in Chromium **and WebKit** against `pywrangler dev`. This is the first proof that the Pyodide glue (`entry.py`, `game_room.py`, `lobby.py`, `glue.py`) works on the real Python Workers runtime.
+
+**Deploy:** fails at the secrets guard, as intended, until H-03 and the Access setup are done.
+
+**Findings**
+- The workspace cannot download job logs or artefacts (blob hosts are policy-denied). `scripts/annotate_failure.py` turns the tail of a failing log into an error annotation, which the checks API returns.
+- WebKit applies the page CSP to the stylesheet Playwright injects for screenshots. The e2e harness tolerates that one message, on WebKit only, while a screenshot is in progress. Every other console error still fails a test.
+
+**Next:** Harry adds the six GitHub secrets and sets up the two Access applications (runbook §4). Then staging deploys on the next push to `main`.
