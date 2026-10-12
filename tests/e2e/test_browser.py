@@ -63,6 +63,8 @@ class Player:
         self.base_url = base_url
         self.page: Page = context.new_page()
         self.problems: list[str] = []
+        self.screenshot_noise: list[str] = []
+        self._screenshotting = False
         self.page.on("console", self._console)
         self.page.on("pageerror", lambda error: self.problems.append(f"pageerror: {error}"))
         # One request with ?as= sets the development identity cookie for this browser context.
@@ -72,7 +74,22 @@ class Player:
     def _console(self, message: Any) -> None:
         if message.type == "error":
             where = message.location.get("url") or "unknown source"
-            self.problems.append(f"console: {message.text} [{where}]")
+            line = f"console: {message.text} [{where}]"
+            if self._screenshotting and self._is_screenshot_stylesheet_noise(message.text):
+                self.screenshot_noise.append(line)
+            else:
+                self.problems.append(line)
+
+    def _is_screenshot_stylesheet_noise(self, text: str) -> bool:
+        # WebKit checks the stylesheet that Playwright itself injects while taking a screenshot
+        # against the page's CSP. That is a harness artefact, not an app violation, so it is
+        # tolerated only for this exact message, on WebKit, while a screenshot is in progress.
+        browser = self.context.browser
+        return (
+            browser is not None
+            and browser.browser_type.name == "webkit"
+            and text.startswith("Refused to apply a stylesheet")
+        )
 
     def goto(self, path: str) -> None:
         self.page.goto(f"{self.base_url}{path}")
@@ -101,11 +118,14 @@ class Player:
         if ARTIFACTS:
             ARTIFACTS.mkdir(parents=True, exist_ok=True)
             browser = self.context.browser.browser_type.name if self.context.browser else "browser"
-            # caret="initial": by default Playwright injects a stylesheet to hide the caret, and
-            # WebKit applies the page's CSP to it, which would log a false CSP violation.
-            self.page.screenshot(
-                path=str(ARTIFACTS / f"{browser}-{name}.png"), full_page=True, caret="initial"
-            )
+            self._screenshotting = True
+            try:
+                self.page.screenshot(
+                    path=str(ARTIFACTS / f"{browser}-{name}.png"), full_page=True, caret="initial"
+                )
+                self.page.evaluate("0")  # round trip so queued console events arrive first
+            finally:
+                self._screenshotting = False
 
 
 @pytest.fixture
